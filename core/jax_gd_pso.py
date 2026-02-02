@@ -41,6 +41,7 @@ def jax_gd_pso(
     seed: random.PRNGKey,
     eta: float,
     steps: int,
+    **_: any,
 ) -> tuple:
     key = seed
     lower, upper = jnp.array(bounds[0]), jnp.array(bounds[1])

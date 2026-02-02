@@ -6,11 +6,10 @@ from .jax_gd_pso import jax_gd_pso
 from .pso import pso
 
 
-def ackley_np(x: np.ndarray) -> float:
+def schwefel_np(x: np.ndarray) -> float:
     n = x.shape[0]
-    sum1 = np.sum(x**2)
-    sum2 = np.sum(np.cos(2 * np.pi * x))
-    return -20 * np.exp(-0.2 * np.sqrt(sum1 / n)) - np.exp(sum2 / n) + 20 + np.e
+    sum_term = np.sum(x * np.sin(np.sqrt(np.abs(x))))
+    return 418.9829 * n - sum_term
 
 
 def rastrigin_np(x: np.ndarray) -> float:
@@ -22,16 +21,18 @@ def sphere_np(x: np.ndarray) -> float:
     return np.sum(x**2)
 
 
-def rosenbrock_np(x: np.ndarray) -> float:
-    return np.sum(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2)
+def elliptic_np(x: np.ndarray) -> float:
+    n = x.shape[0]
+    i = np.arange(n)
+    coeffs = (1e6) ** (i / (n - 1))
+    return np.sum(coeffs * x**2)
 
 
 @jit
-def ackley_jax(x: jnp.ndarray) -> jnp.ndarray:
+def schwefel_jax(x: jnp.ndarray) -> jnp.ndarray:
     n = x.shape[0]
-    sum1 = jnp.sum(x**2)
-    sum2 = jnp.sum(jnp.cos(2 * jnp.pi * x))
-    return -20 * jnp.exp(-0.2 * jnp.sqrt(sum1 / n)) - jnp.exp(sum2 / n) + 20 + jnp.e
+    sum_term = jnp.sum(x * jnp.sin(jnp.sqrt(jnp.abs(x))))
+    return 418.9829 * n - sum_term
 
 
 @jit
@@ -46,25 +47,29 @@ def sphere_jax(x: jnp.ndarray) -> jnp.ndarray:
 
 
 @jit
-def rosenbrock_jax(x: jnp.ndarray) -> jnp.ndarray:
-    return jnp.sum(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2)
+def elliptic_jax(x: jnp.ndarray) -> jnp.ndarray:
+    n = x.shape[0]
+    i = jnp.arange(n)
+
+    coeffs = (1e6) ** (i / (n - 1))
+    return jnp.sum(coeffs * x**2)
 
 
 BENCHMARKS = {
-    "Ackley": {
-        "bounds": (-32.768, 32.768),
-        "PSO": ackley_np,
-        "JAX-GD-PSO": ackley_jax,
+    "Schwefel": {
+        "bounds": (-500, 500),
+        "PSO": schwefel_np,
+        "JAX-GD-PSO": schwefel_jax,
     },
     "Rastrigin": {
         "bounds": (-5.12, 5.12),
         "PSO": rastrigin_np,
         "JAX-GD-PSO": rastrigin_jax,
     },
-    "Rosenbrock": {
+    "Elliptic": {
         "bounds": (-5.0, 10.0),
-        "PSO": rosenbrock_np,
-        "JAX-GD-PSO": rosenbrock_jax,
+        "PSO": elliptic_np,
+        "JAX-GD-PSO": elliptic_jax,
     },
     "Sphere": {
         "bounds": (-5.12, 5.12),
@@ -85,11 +90,15 @@ HYPERPARAMETERS = {
     "num_particles": 30,
     "max_iters": 1000,
     "c1": 1.5,
-    "c2": 1.5,
+    "c2": 2.5,
     "w": 0.7,
     "seed": None,
-    "eta": 0.01,
-    "steps": 5,
+    "eta": 0.001,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "epsilon": 1e-8,
+    "weight_decay": 0.01,
+    "steps": 10,
 }
 
-NUM_RUNS = 50
+NUM_RUNS = 10

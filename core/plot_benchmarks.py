@@ -17,40 +17,91 @@ def plot_execution_time(df: pd.DataFrame, config: dict) -> None:
     benchmarks = df["Benchmark"].unique()
     algorithms = df["Algorithm"].unique()
     dimensions = df["Dimension"].unique()
-    colors = sns.color_palette(config["palette"], n_colors=len(algorithms))
 
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    colors = ["#909090", "#0080FF"]
+
+    plt.rcParams.update(
+        {
+            "font.size": 11,
+            "axes.titlesize": 11,
+            "axes.labelsize": 11,
+            "xtick.labelsize": 11,
+            "ytick.labelsize": 11,
+            "legend.fontsize": 11,
+        },
+    )
+
+    fig, axes = plt.subplots(2, 2, figsize=(5, 4), sharex=True, sharey=True)
     axes_flattened = axes.flatten()
 
-    for ax, benchmark in zip(axes_flattened, benchmarks):
+    lines = []
+    labels = []
+
+    for idx_ax, (ax, benchmark) in enumerate(zip(axes_flattened, benchmarks)):
         df_benchmark = df[df["Benchmark"] == benchmark]
 
-        for idx, algorithm in enumerate(algorithms):
+        for idx_algo, algorithm in enumerate(algorithms):
             df_subset = df_benchmark[df_benchmark["Algorithm"] == algorithm]
             mean = df_subset["Mean of Execution Times (s)"]
             std = df_subset["Standard Deviation of Execution Times (s)"]
 
-            ax.plot(dimensions, mean, marker="o", label=algorithm, color=colors[idx])
-            ax.fill_between(dimensions, mean - std, mean + std, color=colors[idx], alpha=0.2)
+            (line,) = ax.plot(
+                dimensions,
+                mean,
+                label=algorithm,
+                marker="o",
+                color=colors[idx_algo],
+                markersize=6,
+                linewidth=2,
+            )
+            ax.fill_between(dimensions, mean - std, mean + std, color=colors[idx_algo], alpha=0.2)
 
-        ax.set_xlabel("Dimension")
-        ax.set_ylabel("Time (s)")
-        ax.set_title(f"{benchmark}", fontweight="bold")
+            if idx_ax == 0:
+                lines.append(line)
+                labels.append(algorithm)
 
-        if ax == axes_flattened[0]:
-            ax.legend(title="Algorithm")
+        ax.set_yscale("log")
+        ax.set_title(f"{benchmark}")
+        sns.despine(ax=ax, left=True)
+
+    fig.supxlabel("Dimensão")
+    fig.supylabel("Tempo de Execução (s)")
+
+    fig.legend(
+        lines,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.05),
+        ncol=len(algorithms),
+        frameon=False,
+    )
 
     plt.tight_layout()
     _save_figure(fig, "execution_time_plot.pdf", config)
 
 
 def plot_convergence(df: pd.DataFrame, config: dict) -> None:
+    plt.rcParams.update(
+        {
+            "font.size": 13,
+            "axes.titlesize": 13,
+            "axes.labelsize": 13,
+            "xtick.labelsize": 13,
+            "ytick.labelsize": 13,
+            "legend.fontsize": 13,
+        },
+    )
+
     benchmarks = df["Benchmark"].unique()
     dimensions = df["Dimension"].unique()
     algorithms = df["Algorithm"].unique()
-    colors = sns.color_palette(config["palette"], n_colors=len(algorithms))
 
-    fig, axes = plt.subplots(4, 4, figsize=(16, 16))
+    colors = ["#909090", "#0080FF"]
+
+    fig, axes = plt.subplots(4, 4, figsize=(12, 12), sharex=True)
+
+    lines = []
+    labels = []
 
     for i, benchmark in enumerate(benchmarks):
         for j, dimension in enumerate(dimensions):
@@ -62,7 +113,13 @@ def plot_convergence(df: pd.DataFrame, config: dict) -> None:
                 std_history = jnp.array(row["Std Fitness History"])
                 iterations = range(len(mean_history))
 
-                ax.plot(iterations, mean_history, label=row["Algorithm"], color=colors[k])
+                (line,) = ax.plot(
+                    iterations,
+                    mean_history,
+                    label=row["Algorithm"],
+                    color=colors[k],
+                    linewidth=2,
+                )
                 ax.fill_between(
                     iterations,
                     mean_history - std_history,
@@ -71,9 +128,24 @@ def plot_convergence(df: pd.DataFrame, config: dict) -> None:
                     color=colors[k],
                 )
 
-            ax.set_xlabel("Iteration")
-            ax.set_ylabel("Fitness")
-            ax.set_title(f"{benchmark} - {dimension}D", fontsize=10)
+                if i == 0 and j == 0:
+                    lines.append(line)
+                    labels.append(row["Algorithm"])
+
+            sns.despine(ax=ax, left=True)
+            ax.set_title(f"{benchmark} (d = {dimension})")
+
+    fig.supxlabel("Iteração")
+    fig.supylabel("Fitness")
+
+    fig.legend(
+        lines,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.03),
+        ncol=len(algorithms),
+        frameon=False,
+    )
 
     plt.tight_layout()
     _save_figure(fig, "convergence_plot.pdf", config)
@@ -168,7 +240,7 @@ def generate_visualizations(df: pd.DataFrame, config: dict) -> None:
 
 config = {
     "output_path": Path("./results/"),
-    "palette": "viridis",
+    "palette": "Blues",
 }
 
 

@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import jax.numpy as jnp
 import pandas as pd
@@ -35,14 +36,14 @@ def run_experiment() -> list[dict]:
                 for i in range(NUM_RUNS):
                     hyperparameters["seed"] = i
 
-                    if algorithm_name == "JAX-GD-PSO":
+                    if algorithm_name in {"JAX-GD-PSO", "JAX-AdamW-PSO"}:
                         hyperparameters["seed"] = random.PRNGKey(i)
                         algorithm_fn(objective_fn, bounds, **hyperparameters)
 
                     start = time.perf_counter()
                     result = algorithm_fn(objective_fn, bounds, **hyperparameters)
 
-                    if algorithm_name == "JAX-GD-PSO":
+                    if algorithm_name in {"JAX-GD-PSO", "JAX-AdamW-PSO"}:
                         block_until_ready(result)
 
                     end = time.perf_counter()
@@ -82,9 +83,14 @@ def run_experiment() -> list[dict]:
     return results
 
 
+config = {
+    "output_path": Path("./results/"),
+    "palette": "viridis",
+}
+
 if __name__ == "__main__":
     results = run_experiment()
 
     df = pd.DataFrame(results)
-    df.to_csv("./results/benchmark_results.csv")
-    generate_visualizations(df)
+    df.to_csv(config["output_path"] / "benchmark_results.csv")
+    generate_visualizations(df, config)
