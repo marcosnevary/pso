@@ -10,7 +10,9 @@ dependencies = [
     "jinja2>=3.1.6",
     "matplotlib>=3.10.8",
     "numpy>=2.4.2",
+    "optax>=0.2.7",
     "pandas>=3.0.0",
+    "pydantic>=2.12.5",
     "seaborn>=0.13.2",
 ]
 
@@ -36,6 +38,7 @@ ignore = [
 	"T201",    # print() found
 	"PLR0913", # Too many arguments in function definition
     "PLR0915", # Too many statements in function definition
+    "ERA001",  # Found commented-out code
 ]
 
 [tool.ruff.format]
